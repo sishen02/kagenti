@@ -35,6 +35,7 @@ REPO_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
 CLUSTER_NAME="${CLUSTER_NAME:-kagenti}"
 KIND_CONFIG="${KIND_CONFIG:-$REPO_ROOT/scripts/kind/kind-config-registry.yaml}"
 DOMAIN="localtest.me"
+INGRESS_PORT="${KAGENTI_INGRESS_PORT:-8080}"
 
 # Component flags (core is always true)
 WITH_ISTIO=false
@@ -334,6 +335,7 @@ echo "============================================"
 echo ""
 echo "  Cluster:       $CLUSTER_NAME"
 echo "  Domain:        $DOMAIN"
+echo "  Ingress port:  $INGRESS_PORT"
 echo "  Components:"
 echo "    Core:          cert-manager, Gateway API, Istio GW controller, Keycloak, operator, webhook"
 echo "    Istio ambient: $WITH_ISTIO"
@@ -639,7 +641,7 @@ if $WITH_SPIRE; then
     --set tornjak-frontend.enabled=true \
     --set tornjak-frontend.image.tag=v2.0.0 \
     --set tornjak-frontend.ingress.enabled=true \
-    --set "tornjak-frontend.apiServerURL=http://spire-tornjak-ui.${DOMAIN}:8080" \
+    --set "tornjak-frontend.apiServerURL=http://spire-tornjak-ui.${DOMAIN}:${INGRESS_PORT}" \
     --set tornjak-frontend.service.type=ClusterIP \
     --set tornjak-frontend.service.port=3000
 
@@ -710,6 +712,9 @@ run_cmd helm dependency update "$REPO_ROOT/charts/kagenti-deps/"
 DEPS_FLAGS=(
   --set "openshift=false"
   --set "domain=${DOMAIN}"
+  --set "ingressPort=${INGRESS_PORT}"
+  --set "keycloak.publicUrl=http://keycloak.${DOMAIN}:${INGRESS_PORT}"
+  --set "mlflow.corsOrigin=http://mlflow.${DOMAIN}:${INGRESS_PORT}"
   # Core: Keycloak always on
   --set "components.keycloak.enabled=true"
   # cert-manager CRDs are installed in Step 2 — disable the subchart
@@ -1148,8 +1153,9 @@ fi
 KAGENTI_FLAGS=(
   --set "openshift=false"
   --set "domain=${DOMAIN}"
-  --set "keycloak.publicUrl=http://keycloak.${DOMAIN}:8080"
-  --set "mlflow.url=http://mlflow.${DOMAIN}:8080"
+  --set "ui.url=http://kagenti-ui.${DOMAIN}:${INGRESS_PORT}"
+  --set "keycloak.publicUrl=http://keycloak.${DOMAIN}:${INGRESS_PORT}"
+  --set "mlflow.url=http://mlflow.${DOMAIN}:${INGRESS_PORT}"
   --set "components.agentNamespaces.enabled=true"
   --set "components.agentOperator.enabled=true"
   --set "components.ui.enabled=${WITH_BACKEND}"
@@ -1377,17 +1383,17 @@ echo ""
 log_info "Access info:"
 echo ""
 if $WITH_UI; then
-  echo "  Kagenti UI:   http://kagenti-ui.${DOMAIN}:8080"
+  echo "  Kagenti UI:   http://kagenti-ui.${DOMAIN}:${INGRESS_PORT}"
 fi
 if $WITH_BACKEND; then
-  echo "  Kagenti API:  http://kagenti-api.${DOMAIN}:8080"
+  echo "  Kagenti API:  http://kagenti-api.${DOMAIN}:${INGRESS_PORT}"
 fi
-echo "  Keycloak:     http://keycloak.${DOMAIN}:8080"
+echo "  Keycloak:     http://keycloak.${DOMAIN}:${INGRESS_PORT}"
 if $WITH_MLFLOW; then
-  echo "  MLflow:       http://mlflow.${DOMAIN}:8080"
+  echo "  MLflow:       http://mlflow.${DOMAIN}:${INGRESS_PORT}"
 fi
 if $WITH_SPIRE; then
-  echo "  Tornjak:      http://spire-tornjak-ui.${DOMAIN}:8080"
+  echo "  Tornjak:      http://spire-tornjak-ui.${DOMAIN}:${INGRESS_PORT}"
 fi
 echo ""
 echo "  Credentials:"

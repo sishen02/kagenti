@@ -1,0 +1,10 @@
+# Helm dependency overrides for running Kagenti on Kind when host port 8080 is unavailable.
+# Use with scripts/kind/setup-kagenti-18080.sh or pass via:
+#   --kagenti-deps-values scripts/kind/kagenti-deps-values-18080.yaml
+keycloak:
+  publicUrl: http://keycloak.localtest.me:18080
+
+ingressPort: 18080
+
+mlflow:
+  corsOrigin: http://mlflow.localtest.me:18080

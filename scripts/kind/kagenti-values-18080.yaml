@@ -1,0 +1,11 @@
+# Helm overrides for running Kagenti on Kind when host port 8080 is unavailable.
+# Use with scripts/kind/setup-kagenti-18080.sh or pass via:
+#   --kagenti-values scripts/kind/kagenti-values-18080.yaml
+ui:
+  url: http://kagenti-ui.localtest.me:18080
+
+keycloak:
+  publicUrl: http://keycloak.localtest.me:18080
+
+mlflow:
+  url: http://mlflow.localtest.me:18080

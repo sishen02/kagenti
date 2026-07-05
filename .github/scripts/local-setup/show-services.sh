@@ -109,12 +109,13 @@ fi
 # =============================================================================
 if [ "$ENV_TYPE" = "kind" ]; then
     DOMAIN_NAME="${DOMAIN_NAME:-localtest.me}"
-    KEYCLOAK_URL="http://keycloak.${DOMAIN_NAME}:8080"
-    UI_URL="http://kagenti-ui.${DOMAIN_NAME}:8080"
-    MLFLOW_URL="http://mlflow.${DOMAIN_NAME}:8080"
-    PHOENIX_URL="http://phoenix.${DOMAIN_NAME}:8080"
-    KIALI_URL="http://kiali.${DOMAIN_NAME}:8080"
-    API_URL="http://kagenti-api.${DOMAIN_NAME}:8080"
+    INGRESS_PORT="${KAGENTI_INGRESS_PORT:-8080}"
+    KEYCLOAK_URL="http://keycloak.${DOMAIN_NAME}:${INGRESS_PORT}"
+    UI_URL="http://kagenti-ui.${DOMAIN_NAME}:${INGRESS_PORT}"
+    MLFLOW_URL="http://mlflow.${DOMAIN_NAME}:${INGRESS_PORT}"
+    PHOENIX_URL="http://phoenix.${DOMAIN_NAME}:${INGRESS_PORT}"
+    KIALI_URL="http://kiali.${DOMAIN_NAME}:${INGRESS_PORT}"
+    API_URL="http://kagenti-api.${DOMAIN_NAME}:${INGRESS_PORT}"
     AGENT_URL=""
     CONSOLE_URL=""
 else

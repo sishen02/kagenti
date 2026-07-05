@@ -58,6 +58,8 @@ SKIP_KUADRANT=false
 BUILD_IMAGES=false
 PRELOAD_IMAGES=false
 INSTALL_EXAMPLES=false
+INSTALL_COCKROACHDB=false
+COCKROACHDB_MANIFEST="${COCKROACHDB_MANIFEST:-$REPO_ROOT/kagenti/examples/databases/cockroachdb.yaml}"
 DRY_RUN=false
 SECRETS_FILE_ARG=""
 CONTAINER_ENGINE="${CONTAINER_ENGINE:-docker}"
@@ -229,6 +231,8 @@ while [[ $# -gt 0 ]]; do
     --kagenti-values)   KAGENTI_VALUES_FILES+=("--values" "$2"); shift 2 ;;
     --kagenti-deps-values) KAGENTI_DEPS_VALUES_FILES+=("--values" "$2"); shift 2 ;;
     --with-examples)    INSTALL_EXAMPLES=true; shift ;;
+    --with-cockroachdb) INSTALL_COCKROACHDB=true; shift ;;
+    --cockroachdb-manifest) COCKROACHDB_MANIFEST="$2"; shift 2 ;;
     --dry-run)          DRY_RUN=true; shift ;;
     -h|--help)
       echo "Usage: $0 [OPTIONS]"
@@ -278,6 +282,9 @@ while [[ $# -gt 0 ]]; do
       echo "  --kagenti-deps-values FILE"
       echo "                      Helm override file to apply to Kagenti-deps chart"
       echo "  --with-examples     Install weather agent and weather tool examples"
+      echo "  --with-cockroachdb  Install the CockroachDB example manifest"
+      echo "  --cockroachdb-manifest FILE"
+      echo "                      Override CockroachDB manifest path"
       echo "  --dry-run           Show commands without executing"
       echo "  -h, --help          Show this help"
       exit 0 ;;
@@ -355,6 +362,7 @@ echo "    Skip cluster:  $SKIP_CLUSTER"
 echo "    Build images:  $BUILD_IMAGES"
 echo "    Preload imgs:  $PRELOAD_IMAGES"
 echo "    Examples:      $INSTALL_EXAMPLES"
+echo "    CockroachDB:    $INSTALL_COCKROACHDB"
 echo "    Kagenti helm --values overrides: ${KAGENTI_VALUES_FILES[*]:-}"
 echo "    Kagenti-deps helm --values overrides: ${KAGENTI_DEPS_VALUES_FILES[*]:-}"
 echo ""
@@ -382,6 +390,10 @@ _check_podman
 # Validate chart directories exist
 if [ ! -d "$REPO_ROOT/charts/kagenti-deps" ] || [ ! -d "$REPO_ROOT/charts/kagenti" ]; then
   log_error "Charts not found. Run this script from the kagenti repo root."
+  exit 1
+fi
+if $INSTALL_COCKROACHDB && [ ! -f "$COCKROACHDB_MANIFEST" ]; then
+  log_error "CockroachDB manifest not found: $COCKROACHDB_MANIFEST"
   exit 1
 fi
 echo ""
@@ -1307,6 +1319,28 @@ if $INSTALL_EXAMPLES; then
   fi
 else
   log_info "Skipped (use --with-examples)"
+fi
+echo ""
+
+# ============================================================================
+# Step 9c: Install CockroachDB example
+# ============================================================================
+log_info "Step 9c: CockroachDB example"
+
+if $INSTALL_COCKROACHDB; then
+  if kubectl get namespace cockroachdb &>/dev/null; then
+    log_success "Namespace cockroachdb already exists"
+  else
+    run_cmd kubectl create namespace cockroachdb
+  fi
+  run_cmd kubectl apply -f "$COCKROACHDB_MANIFEST"
+  if ! $DRY_RUN; then
+    kubectl rollout status deployment/cockroachdb -n cockroachdb --timeout=300s || \
+      log_warn "CockroachDB rollout not ready within timeout"
+  fi
+  log_success "CockroachDB example installed"
+else
+  log_info "Skipped (use --with-cockroachdb)"
 fi
 echo ""
 

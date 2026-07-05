@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: cockroachdb
+  namespace: cockroachdb
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: cockroachdb
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: cockroachdb
+    spec:
+      containers:
+      - name: cockroachdb
+        image: cockroachdb/cockroach:latest
+        command:
+        - /cockroach/cockroach
+        args:
+        - start-single-node
+        - --insecure
+        - --listen-addr=localhost:26357
+        - --sql-addr=0.0.0.0:26257
+        - --http-addr=0.0.0.0:8080
+        - --store=/cockroach/cockroach-data
+        - --cache=.25
+        - --max-sql-memory=.25
+        ports:
+        - name: sql
+          containerPort: 26257
+        - name: http
+          containerPort: 8080
+        volumeMounts:
+        - name: cockroach-data
+          mountPath: /cockroach/cockroach-data
+      volumes:
+      - name: cockroach-data
+        emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: cockroachdb
+  namespace: cockroachdb
+spec:
+  selector:
+    app.kubernetes.io/name: cockroachdb
+  ports:
+  - name: sql
+    port: 26257
+    targetPort: 26257
+  - name: http
+    port: 8080
+    targetPort: 8080

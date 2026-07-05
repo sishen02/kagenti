@@ -60,6 +60,7 @@ PRELOAD_IMAGES=false
 INSTALL_EXAMPLES=false
 INSTALL_COCKROACHDB=false
 COCKROACHDB_MANIFEST="${COCKROACHDB_MANIFEST:-$REPO_ROOT/kagenti/examples/databases/cockroachdb.yaml}"
+COCKROACHDB_TOOL_RBAC_MANIFEST="${COCKROACHDB_TOOL_RBAC_MANIFEST:-$REPO_ROOT/kagenti/examples/databases/cockroachdb-tool-rbac.yaml}"
 DRY_RUN=false
 SECRETS_FILE_ARG=""
 CONTAINER_ENGINE="${CONTAINER_ENGINE:-docker}"
@@ -233,6 +234,7 @@ while [[ $# -gt 0 ]]; do
     --with-examples)    INSTALL_EXAMPLES=true; shift ;;
     --with-cockroachdb) INSTALL_COCKROACHDB=true; shift ;;
     --cockroachdb-manifest) COCKROACHDB_MANIFEST="$2"; shift 2 ;;
+    --cockroachdb-tool-rbac-manifest) COCKROACHDB_TOOL_RBAC_MANIFEST="$2"; shift 2 ;;
     --dry-run)          DRY_RUN=true; shift ;;
     -h|--help)
       echo "Usage: $0 [OPTIONS]"
@@ -285,6 +287,8 @@ while [[ $# -gt 0 ]]; do
       echo "  --with-cockroachdb  Install the CockroachDB example manifest"
       echo "  --cockroachdb-manifest FILE"
       echo "                      Override CockroachDB manifest path"
+      echo "  --cockroachdb-tool-rbac-manifest FILE"
+      echo "                      Override CockroachDB tool RBAC manifest path"
       echo "  --dry-run           Show commands without executing"
       echo "  -h, --help          Show this help"
       exit 0 ;;
@@ -394,6 +398,10 @@ if [ ! -d "$REPO_ROOT/charts/kagenti-deps" ] || [ ! -d "$REPO_ROOT/charts/kagent
 fi
 if $INSTALL_COCKROACHDB && [ ! -f "$COCKROACHDB_MANIFEST" ]; then
   log_error "CockroachDB manifest not found: $COCKROACHDB_MANIFEST"
+  exit 1
+fi
+if $INSTALL_COCKROACHDB && [ ! -f "$COCKROACHDB_TOOL_RBAC_MANIFEST" ]; then
+  log_error "CockroachDB tool RBAC manifest not found: $COCKROACHDB_TOOL_RBAC_MANIFEST"
   exit 1
 fi
 echo ""
@@ -1334,6 +1342,7 @@ if $INSTALL_COCKROACHDB; then
     run_cmd kubectl create namespace cockroachdb
   fi
   run_cmd kubectl apply -f "$COCKROACHDB_MANIFEST"
+  run_cmd kubectl apply -f "$COCKROACHDB_TOOL_RBAC_MANIFEST"
   if ! $DRY_RUN; then
     kubectl rollout status deployment/cockroachdb -n cockroachdb --timeout=300s || \
       log_warn "CockroachDB rollout not ready within timeout"

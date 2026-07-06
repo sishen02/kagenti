@@ -1341,10 +1341,12 @@ if $INSTALL_COCKROACHDB; then
   else
     run_cmd kubectl create namespace cockroachdb
   fi
+  run_cmd kubectl delete deployment/cockroachdb -n cockroachdb --ignore-not-found
+  run_cmd kubectl delete service/cockroachdb -n cockroachdb --ignore-not-found
   run_cmd kubectl apply -f "$COCKROACHDB_MANIFEST"
   run_cmd kubectl apply -f "$COCKROACHDB_TOOL_RBAC_MANIFEST"
   if ! $DRY_RUN; then
-    kubectl rollout status deployment/cockroachdb -n cockroachdb --timeout=300s || \
+    kubectl rollout status statefulset/cockroachdb -n cockroachdb --timeout=300s || \
       log_warn "CockroachDB rollout not ready within timeout"
   fi
   log_success "CockroachDB example installed"

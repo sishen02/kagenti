@@ -1,10 +1,13 @@
 apiVersion: apps/v1
-kind: Deployment
+kind: StatefulSet
 metadata:
   name: cockroachdb
   namespace: cockroachdb
+  labels:
+    app.kubernetes.io/name: cockroachdb
 spec:
   replicas: 1
+  serviceName: cockroachdb
   selector:
     matchLabels:
       app.kubernetes.io/name: cockroachdb
@@ -35,16 +38,25 @@ spec:
         volumeMounts:
         - name: cockroach-data
           mountPath: /cockroach/cockroach-data
-      volumes:
-      - name: cockroach-data
-        emptyDir: {}
+  volumeClaimTemplates:
+  - metadata:
+      name: cockroach-data
+    spec:
+      accessModes:
+      - ReadWriteOnce
+      resources:
+        requests:
+          storage: 1Gi
 ---
 apiVersion: v1
 kind: Service
 metadata:
   name: cockroachdb
   namespace: cockroachdb
+  labels:
+    app.kubernetes.io/name: cockroachdb
 spec:
+  clusterIP: None
   selector:
     app.kubernetes.io/name: cockroachdb
   ports:

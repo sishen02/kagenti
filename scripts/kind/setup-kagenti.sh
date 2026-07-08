@@ -1348,6 +1348,16 @@ if $INSTALL_COCKROACHDB; then
   if ! $DRY_RUN; then
     kubectl rollout status statefulset/cockroachdb -n cockroachdb --timeout=300s || \
       log_warn "CockroachDB rollout not ready within timeout"
+    init_output="$(kubectl exec -n cockroachdb cockroachdb-0 -- \
+      /cockroach/cockroach init \
+      --host=cockroachdb-0.cockroachdb.cockroachdb.svc.cluster.local:26357 \
+      --insecure 2>&1 || true)"
+    if echo "$init_output" | grep -Eq "cluster has already been initialized|Cluster successfully initialized"; then
+      log_success "CockroachDB cluster initialized"
+    else
+      log_warn "CockroachDB cluster initialization did not report success"
+      echo "$init_output"
+    fi
   fi
   log_success "CockroachDB example installed"
 else

@@ -6,7 +6,7 @@ metadata:
   labels:
     app.kubernetes.io/name: cockroachdb
 spec:
-  replicas: 1
+  replicas: 3
   serviceName: cockroachdb
   selector:
     matchLabels:
@@ -22,15 +22,24 @@ spec:
         command:
         - /cockroach/cockroach
         args:
-        - start-single-node
+        - start
         - --insecure
-        - --listen-addr=localhost:26357
+        - --advertise-addr=$(POD_NAME).cockroachdb.cockroachdb.svc.cluster.local:26357
+        - --listen-addr=0.0.0.0:26357
         - --sql-addr=0.0.0.0:26257
         - --http-addr=0.0.0.0:8080
+        - --join=cockroachdb-0.cockroachdb.cockroachdb.svc.cluster.local:26357,cockroachdb-1.cockroachdb.cockroachdb.svc.cluster.local:26357,cockroachdb-2.cockroachdb.cockroachdb.svc.cluster.local:26357
         - --store=/cockroach/cockroach-data
         - --cache=.25
         - --max-sql-memory=.25
+        env:
+        - name: POD_NAME
+          valueFrom:
+            fieldRef:
+              fieldPath: metadata.name
         ports:
+        - name: grpc
+          containerPort: 26357
         - name: sql
           containerPort: 26257
         - name: http
@@ -60,6 +69,9 @@ spec:
   selector:
     app.kubernetes.io/name: cockroachdb
   ports:
+  - name: grpc
+    port: 26357
+    targetPort: 26357
   - name: sql
     port: 26257
     targetPort: 26257

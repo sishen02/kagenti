@@ -24,11 +24,8 @@ spec:
         args:
         - start
         - --insecure
-        - --advertise-addr=$(POD_NAME).cockroachdb.cockroachdb.svc.cluster.local:26357
-        - --listen-addr=0.0.0.0:26357
-        - --sql-addr=0.0.0.0:26257
-        - --http-addr=0.0.0.0:8080
-        - --join=cockroachdb-0.cockroachdb.cockroachdb.svc.cluster.local:26357,cockroachdb-1.cockroachdb.cockroachdb.svc.cluster.local:26357,cockroachdb-2.cockroachdb.cockroachdb.svc.cluster.local:26357
+        - --advertise-addr=$(POD_NAME).cockroachdb.cockroachdb.svc.cluster.local:26257
+        - --join=cockroachdb-0.cockroachdb.cockroachdb.svc.cluster.local:26257,cockroachdb-1.cockroachdb.cockroachdb.svc.cluster.local:26257,cockroachdb-2.cockroachdb.cockroachdb.svc.cluster.local:26257
         - --store=/cockroach/cockroach-data
         - --external-io-dir=/cockroach/cockroach-data/extern
         - --cache=.25

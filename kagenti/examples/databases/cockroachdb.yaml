@@ -30,6 +30,7 @@ spec:
         - --http-addr=0.0.0.0:8080
         - --join=cockroachdb-0.cockroachdb.cockroachdb.svc.cluster.local:26357,cockroachdb-1.cockroachdb.cockroachdb.svc.cluster.local:26357,cockroachdb-2.cockroachdb.cockroachdb.svc.cluster.local:26357
         - --store=/cockroach/cockroach-data
+        - --external-io-dir=/cockroach/cockroach-data/extern
         - --cache=.25
         - --max-sql-memory=.25
         env:
